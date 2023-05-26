@@ -126,7 +126,12 @@ fn compute_all(s1: &str, s2: &str, norm: bool) -> Result<Value, LabeledError> {
     let mut rows = vec![];
     for algo in algos {
         let sim = Value::string(algo.to_string(), span);
-        let val = Value::float(compute(&algo, s1, s2, norm), span);
+        let val_comp = compute(&algo, s1, s2, norm);
+        let val = if val_comp.fract() == 0.0 {
+            Value::int(val_comp as i64, span)
+        } else {
+            Value::float(val_comp, span)
+        };
         rows.push(Value::Record {
             cols: cols.clone(),
             vals: vec![sim, val],
@@ -220,10 +225,17 @@ fn compare_strings(
 
     let a_val = compute(sim_algo, compare_from, &compare_to, normalize);
 
-    Ok(Value::Float {
-        val: a_val,
-        span: input_span,
-    })
+    if a_val.fract() == 0.0 {
+        Ok(Value::Int {
+            val: a_val as i64,
+            span: input_span,
+        })
+    } else {
+        Ok(Value::Float {
+            val: a_val,
+            span: input_span,
+        })
+    }
 }
 
 fn main() {
