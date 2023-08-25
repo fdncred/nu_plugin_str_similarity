@@ -1,7 +1,9 @@
 use std::vec;
 
 use nu_plugin::{serve_plugin, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin};
-use nu_protocol::{Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value};
+use nu_protocol::{
+    record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
+};
 use textdistance::{nstr, str};
 
 struct StrSimilarity;
@@ -31,11 +33,40 @@ impl Plugin for StrSimilarity {
             )
             .switch("all", "Run all algorithms", Some('A'))
             .category(Category::Experimental)
-            .plugin_examples(vec![PluginExample {
-                description: "This is the example descripion".into(),
-                example: "some pipeline involving str_similarity".into(),
-                result: None,
-            }])]
+            .plugin_examples(vec![
+                PluginExample {
+                    description: "Compare two strings for similarity".into(),
+                    example: "'nutshell' | str similarity 'nushell'".into(),
+                    result: None,
+                },
+                PluginExample {
+                    description:
+                        "Compare two strings for similarity and normalize the output value".into(),
+                    example: "'nutshell' | str similarity -n 'nushell'".into(),
+                    result: None,
+                },
+                PluginExample {
+                    description: "Compare two strings for similarity using a specific algorithm"
+                        .into(),
+                    example: "'nutshell' | str similarity 'nushell' -a levenshtein".into(),
+                    result: None,
+                },
+                PluginExample {
+                    description: "List all the included similarity algorithms".into(),
+                    example: "str similarity 'nu' --list".into(),
+                    result: None,
+                },
+                PluginExample {
+                    description: "Compare two strings for similarity with all algorithms".into(),
+                    example: "'nutshell' | str similarity 'nushell' -A".into(),
+                    result: None,
+                },
+                PluginExample {
+                    description: "Compare two strings for similarity with all algorithms and normalize the output value".into(),
+                    example: "'nutshell' | str similarity 'nushell' -A -n".into(),
+                    result: None,
+                },
+            ])]
     }
 
     fn run(
@@ -122,7 +153,6 @@ fn compute_all(s1: &str, s2: &str, norm: bool) -> Result<Value, LabeledError> {
         "tversky",
         "yujian_bo",
     ];
-    let cols = vec!["algorithm".to_string(), "distance".to_string()];
     let mut rows = vec![];
     for algo in algos {
         let sim = Value::string(algo.to_string(), span);
@@ -132,11 +162,13 @@ fn compute_all(s1: &str, s2: &str, norm: bool) -> Result<Value, LabeledError> {
         } else {
             Value::float(val_comp, span)
         };
-        rows.push(Value::Record {
-            cols: cols.clone(),
-            vals: vec![sim, val],
+        rows.push(Value::record(
+            record! {
+                "algorithm" => sim,
+                "distance" => val
+            },
             span,
-        });
+        ))
     }
 
     Ok(Value::List { vals: rows, span })
@@ -178,34 +210,34 @@ fn compute(a: &str, s1: &str, s2: &str, norm: bool) -> f64 {
 #[rustfmt::skip]
 fn list_algorithms() -> Value {
     let span = Span::unknown();
-    let cols = vec!["algorithm".to_string(), "alias".to_string()];
     let mut rows = vec![];
 
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("bag", span), Value::string("bag", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("cosine", span), Value::string("cos", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("damerau_levenshtein", span), Value::string("dlev", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("entropy_ncd", span), Value::string("entncd", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("hamming", span), Value::string("ham", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("jaccard", span), Value::string("jac", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("jaro", span), Value::string("jar", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("jaro_winkler", span), Value::string("jarw", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("levenshtein", span), Value::string("lev", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("longest_common_subsequence", span), Value::string("lcsubseq", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("longest_common_substring", span), Value::string("lcsubstr", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("length", span), Value::string("len", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("lig3", span), Value::string("lig", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("mlipns", span), Value::string("mli", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("overlap", span), Value::string("olap", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("prefix", span), Value::string("pre", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("ratcliff_obershelp", span), Value::string("rat", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("roberts", span), Value::string("rob", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("sift4_common", span), Value::string("scom", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("sift4_simple", span), Value::string("ssim", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("smith_waterman", span), Value::string("smithw", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("sorensen_dice", span), Value::string("soredice", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("suffix", span), Value::string("suf", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("tversky", span), Value::string("tv", span)], span});
-    rows.push(Value::Record {cols: cols.clone(), vals: vec![Value::string("yujian_bo", span), Value::string("ybo", span)], span});
+    rows.push(Value::record( record! { "algorithm" => Value::string("bag", span), "alias" => Value::string("bag", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("cosine", span), "alias" => Value::string("cos", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("damerau_levenshtein", span), "alias" => Value::string("dlev", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("entropy_ncd", span), "alias" => Value::string("entncd", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("hamming", span), "alias" => Value::string("ham", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("jaccard", span), "alias" => Value::string("jac", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("jaro", span), "alias" => Value::string("jar", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("jaro_winkler", span), "alias" => Value::string("jarw", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("levenshtein", span), "alias" => Value::string("lev", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("longest_common_subsequence", span), "alias" => Value::string("lcsubseq", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("longest_common_substring", span), "alias" => Value::string("lcsubstr", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("length", span), "alias" => Value::string("len", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("lig3", span), "alias" => Value::string("lig", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("mlipns", span), "alias" => Value::string("mli", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("overlap", span), "alias" => Value::string("olap", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("prefix", span), "alias" => Value::string("pre", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("ratcliff_obershelp", span), "alias" => Value::string("rat", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("roberts", span), "alias" => Value::string("rob", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("sift4_common", span), "alias" => Value::string("scom", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("sift4_simple", span), "alias" => Value::string("ssim", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("smith_waterman", span), "alias" => Value::string("smithw", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("sorensen_dice", span), "alias" => Value::string("soredice", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("suffix", span), "alias" => Value::string("suf", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("tversky", span), "alias" => Value::string("tv", span) }, span, ));
+    rows.push(Value::record( record! { "algorithm" => Value::string("yujian_bo", span), "alias" => Value::string("ybo", span) }, span, ));
+
 
     Value::List {
         vals: rows,
