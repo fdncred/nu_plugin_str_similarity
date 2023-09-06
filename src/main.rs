@@ -100,15 +100,13 @@ impl Plugin for StrSimilarity {
         };
         let all = call.has_flag("all");
 
+        let input_span = input.span();
         let ret_val = match input {
-            Value::String {
-                val: input_val,
-                span: input_span,
-            } => {
+            Value::String { val: input_val, .. } => {
                 if all {
                     compute_all(&compare_to_str.item, input_val, normalize)?
                 } else {
-                    compare_strings(&sim, compare_to_str, normalize, input_val, *input_span)?
+                    compare_strings(&sim, compare_to_str, normalize, input_val, input_span)?
                 }
             }
             v => {
@@ -171,7 +169,7 @@ fn compute_all(s1: &str, s2: &str, norm: bool) -> Result<Value, LabeledError> {
         ))
     }
 
-    Ok(Value::List { vals: rows, span })
+    Ok(Value::list(rows, span))
 }
 
 #[rustfmt::skip]
@@ -239,10 +237,7 @@ fn list_algorithms() -> Value {
     rows.push(Value::record( record! { "algorithm" => Value::string("yujian_bo", span), "alias" => Value::string("ybo", span) }, span, ));
 
 
-    Value::List {
-        vals: rows,
-        span,
-    }
+    Value::list(rows,span)
 }
 
 fn compare_strings(
@@ -258,15 +253,9 @@ fn compare_strings(
     let a_val = compute(sim_algo, compare_from, &compare_to, normalize);
 
     if a_val.fract() == 0.0 {
-        Ok(Value::Int {
-            val: a_val as i64,
-            span: input_span,
-        })
+        Ok(Value::int(a_val as i64, input_span))
     } else {
-        Ok(Value::Float {
-            val: a_val,
-            span: input_span,
-        })
+        Ok(Value::float(a_val, input_span))
     }
 }
 
