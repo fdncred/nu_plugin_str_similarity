@@ -2,7 +2,7 @@ use std::vec;
 
 use nu_plugin::{serve_plugin, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin};
 use nu_protocol::{
-    record, Category, PluginExample, PluginSignature, Record, Span, Spanned, SyntaxShape, Value,
+    record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
 };
 use textdistance::{nstr, str};
 
@@ -101,7 +101,6 @@ impl Plugin for StrSimilarity {
         let all = call.has_flag("all");
         let input_span = input.span();
 
-        let input_span = input.span();
         let ret_val = match input {
             Value::String { val: input_val, .. } => {
                 if all {
