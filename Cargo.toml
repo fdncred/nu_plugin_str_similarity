@@ -1,6 +1,6 @@
 [package]
 name = "nu_plugin_str_similarity"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["Darren Schroeder"]
 edition = "2021"
 repository = "https://github.com/fdncred/nu_plugin_str_similarity"
@@ -11,8 +11,8 @@ license = "MIT"
 
 [dependencies]
 # for local development, you can use a path dependency
-nu-plugin = { path = "../nushell/crates/nu-plugin", version = "0.84.1" }
-nu-protocol = { path = "../nushell/crates/nu-protocol", version = "0.84.1" }
+nu-plugin = { path = "../nushell/crates/nu-plugin", version = "0.86.1" }
+nu-protocol = { path = "../nushell/crates/nu-protocol", version = "0.86.1" }
 # nu-plugin = "0.80.0"
 # nu-protocol = "0.80.0"
 

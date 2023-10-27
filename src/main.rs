@@ -2,7 +2,7 @@ use std::vec;
 
 use nu_plugin::{serve_plugin, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin};
 use nu_protocol::{
-    record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
+    record, Category, PluginExample, PluginSignature, Record, Span, Spanned, SyntaxShape, Value,
 };
 use textdistance::{nstr, str};
 
@@ -99,6 +99,7 @@ impl Plugin for StrSimilarity {
             None => "levenshtein".to_string(),
         };
         let all = call.has_flag("all");
+        let input_span = input.span();
 
         let input_span = input.span();
         let ret_val = match input {
@@ -160,16 +161,12 @@ fn compute_all(s1: &str, s2: &str, norm: bool) -> Result<Value, LabeledError> {
         } else {
             Value::float(val_comp, span)
         };
-        rows.push(Value::record(
-            record! {
-                "algorithm" => sim,
-                "distance" => val
-            },
-            span,
-        ))
+        rows.push(Value::test_record(
+            record! { "algorithm" => sim, "distance" => val },
+        ));
     }
 
-    Ok(Value::list(rows, span))
+    Ok(Value::test_list(rows))
 }
 
 #[rustfmt::skip]
@@ -207,37 +204,35 @@ fn compute(a: &str, s1: &str, s2: &str, norm: bool) -> f64 {
 
 #[rustfmt::skip]
 fn list_algorithms() -> Value {
-    let span = Span::unknown();
     let mut rows = vec![];
 
-    rows.push(Value::record( record! { "algorithm" => Value::string("bag", span), "alias" => Value::string("bag", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("cosine", span), "alias" => Value::string("cos", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("damerau_levenshtein", span), "alias" => Value::string("dlev", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("entropy_ncd", span), "alias" => Value::string("entncd", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("hamming", span), "alias" => Value::string("ham", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("jaccard", span), "alias" => Value::string("jac", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("jaro", span), "alias" => Value::string("jar", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("jaro_winkler", span), "alias" => Value::string("jarw", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("levenshtein", span), "alias" => Value::string("lev", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("longest_common_subsequence", span), "alias" => Value::string("lcsubseq", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("longest_common_substring", span), "alias" => Value::string("lcsubstr", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("length", span), "alias" => Value::string("len", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("lig3", span), "alias" => Value::string("lig", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("mlipns", span), "alias" => Value::string("mli", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("overlap", span), "alias" => Value::string("olap", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("prefix", span), "alias" => Value::string("pre", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("ratcliff_obershelp", span), "alias" => Value::string("rat", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("roberts", span), "alias" => Value::string("rob", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("sift4_common", span), "alias" => Value::string("scom", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("sift4_simple", span), "alias" => Value::string("ssim", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("smith_waterman", span), "alias" => Value::string("smithw", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("sorensen_dice", span), "alias" => Value::string("soredice", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("suffix", span), "alias" => Value::string("suf", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("tversky", span), "alias" => Value::string("tv", span) }, span, ));
-    rows.push(Value::record( record! { "algorithm" => Value::string("yujian_bo", span), "alias" => Value::string("ybo", span) }, span, ));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("bag"), "short" => Value::test_string("bag")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("cosine"), "short" => Value::test_string("cos")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("damerau_levenshtein"), "short" => Value::test_string("dlev")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("entropy_ncd"), "short" => Value::test_string("entncd")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("hamming"), "short" => Value::test_string("ham")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("jaccard"), "short" => Value::test_string("jac")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("jaro"), "short" => Value::test_string("jar")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("jaro_winkler"), "short" => Value::test_string("jarw")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("levenshtein"), "short" => Value::test_string("lev")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("longest_common_subsequence"), "short" => Value::test_string("lcsubseq")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("longest_common_substring"), "short" => Value::test_string("lcsubstr")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("length"), "short" => Value::test_string("len")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("lig3"), "short" => Value::test_string("lig")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("mlipns"), "short" => Value::test_string("mli")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("overlap"), "short" => Value::test_string("olap")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("prefix"), "short" => Value::test_string("pre")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("ratcliff_obershelp"), "short" => Value::test_string("rat")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("roberts"), "short" => Value::test_string("rob")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("sift4_common"), "short" => Value::test_string("scom")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("sift4_simple"), "short" => Value::test_string("ssim")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("smith_waterman"), "short" => Value::test_string("smithw")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("sorensen_dice"), "short" => Value::test_string("soredice")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("suffix"), "short" => Value::test_string("suf")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("tversky"), "short" => Value::test_string("tv")}));
+    rows.push(Value::test_record(record! { "algorithm" => Value::test_string("yujian_bo"), "short" => Value::test_string("ybo")}));
 
-
-    Value::list(rows,span)
+    Value::test_list(rows)
 }
 
 fn compare_strings(
