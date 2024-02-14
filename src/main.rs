@@ -89,8 +89,8 @@ impl Plugin for StrSimilarity {
                 })
             }
         };
-        let normalize = call.has_flag("normalize");
-        let list = call.has_flag("list");
+        let normalize = call.has_flag("normalize")?;
+        let list = call.has_flag("list")?;
         if list {
             return Ok(list_algorithms());
         }
@@ -99,7 +99,7 @@ impl Plugin for StrSimilarity {
             Some(a) => a.to_string(),
             None => "levenshtein".to_string(),
         };
-        let all = call.has_flag("all");
+        let all = call.has_flag("all")?;
         let input_span = input.span();
 
         let ret_val = match input {
