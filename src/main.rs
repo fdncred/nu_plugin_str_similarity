@@ -1,6 +1,8 @@
 use std::vec;
 
-use nu_plugin::{serve_plugin, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin};
+use nu_plugin::{
+    serve_plugin, EngineInterface, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin,
+};
 use nu_protocol::{
     record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
 };
@@ -70,9 +72,9 @@ impl Plugin for StrSimilarity {
     }
 
     fn run(
-        &mut self,
+        &self,
         name: &str,
-        _config: &Option<Value>,
+        _engine: &EngineInterface,
         call: &EvaluatedCall,
         input: &Value,
     ) -> Result<Value, LabeledError> {
