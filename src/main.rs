@@ -2,23 +2,28 @@ use std::vec;
 
 use nu_plugin::{
     serve_plugin, EngineInterface, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin,
+    PluginCommand, SimplePluginCommand,
 };
 use nu_protocol::{
     record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
 };
 use textdistance::{nstr, str};
 
-struct StrSimilarity;
+struct StrSimilarityPlugin;
 
-impl StrSimilarity {
-    fn new() -> Self {
-        Self {}
+impl Plugin for StrSimilarityPlugin {
+    fn commands(&self) -> Vec<Box<dyn PluginCommand<Plugin = Self>>> {
+        vec![Box::new(StrSimilarity)]
     }
 }
 
-impl Plugin for StrSimilarity {
-    fn signature(&self) -> Vec<PluginSignature> {
-        vec![PluginSignature::build("str similarity")
+struct StrSimilarity;
+
+impl SimplePluginCommand for StrSimilarity {
+    type Plugin = StrSimilarityPlugin;
+
+    fn signature(&self) -> PluginSignature {
+        PluginSignature::build("str similarity")
             .usage("Compare strings to find similarity by algorithm")
             .required("string", SyntaxShape::String, "String to compare with")
             .switch(
@@ -68,18 +73,16 @@ impl Plugin for StrSimilarity {
                     example: "'nutshell' | str similarity 'nushell' -A -n".into(),
                     result: None,
                 },
-            ])]
+            ])
     }
 
     fn run(
         &self,
-        name: &str,
+        _config: &StrSimilarityPlugin,
         _engine: &EngineInterface,
         call: &EvaluatedCall,
         input: &Value,
     ) -> Result<Value, LabeledError> {
-        assert_eq!(name, "str similarity");
-
         let compare_to_str_optn: Option<Spanned<String>> = call.opt(0)?;
         let compare_to_str = match compare_to_str_optn {
             Some(p) => p,
@@ -257,5 +260,5 @@ fn compare_strings(
 }
 
 fn main() {
-    serve_plugin(&mut StrSimilarity::new(), MsgPackSerializer);
+    serve_plugin(&StrSimilarityPlugin, MsgPackSerializer);
 }
