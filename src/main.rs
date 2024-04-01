@@ -1,11 +1,11 @@
 use std::vec;
 
 use nu_plugin::{
-    serve_plugin, EngineInterface, EvaluatedCall, LabeledError, MsgPackSerializer, Plugin,
-    PluginCommand, SimplePluginCommand,
+    serve_plugin, EngineInterface, EvaluatedCall, MsgPackSerializer, Plugin, PluginCommand,
+    SimplePluginCommand,
 };
 use nu_protocol::{
-    record, Category, PluginExample, PluginSignature, Span, Spanned, SyntaxShape, Value,
+    record, Category, Example, LabeledError, Signature, Span, Spanned, SyntaxShape, Value,
 };
 use textdistance::{nstr, str};
 
@@ -22,9 +22,15 @@ struct StrSimilarity;
 impl SimplePluginCommand for StrSimilarity {
     type Plugin = StrSimilarityPlugin;
 
-    fn signature(&self) -> PluginSignature {
-        PluginSignature::build("str similarity")
-            .usage("Compare strings to find similarity by algorithm")
+    fn name(&self) -> &str {
+        "str similarity"
+    }
+
+    fn usage(&self) -> &str {
+        "Compare strings to find similarity by algorithm"
+    }
+    fn signature(&self) -> Signature {
+        Signature::build(PluginCommand::name(self))
             .required("string", SyntaxShape::String, "String to compare with")
             .switch(
                 "normalize",
@@ -40,40 +46,43 @@ impl SimplePluginCommand for StrSimilarity {
             )
             .switch("all", "Run all algorithms", Some('A'))
             .category(Category::Experimental)
-            .plugin_examples(vec![
-                PluginExample {
-                    description: "Compare two strings for similarity".into(),
-                    example: "'nutshell' | str similarity 'nushell'".into(),
-                    result: None,
-                },
-                PluginExample {
-                    description:
-                        "Compare two strings for similarity and normalize the output value".into(),
-                    example: "'nutshell' | str similarity -n 'nushell'".into(),
-                    result: None,
-                },
-                PluginExample {
-                    description: "Compare two strings for similarity using a specific algorithm"
-                        .into(),
-                    example: "'nutshell' | str similarity 'nushell' -a levenshtein".into(),
-                    result: None,
-                },
-                PluginExample {
-                    description: "List all the included similarity algorithms".into(),
-                    example: "str similarity 'nu' --list".into(),
-                    result: None,
-                },
-                PluginExample {
-                    description: "Compare two strings for similarity with all algorithms".into(),
-                    example: "'nutshell' | str similarity 'nushell' -A".into(),
-                    result: None,
-                },
-                PluginExample {
-                    description: "Compare two strings for similarity with all algorithms and normalize the output value".into(),
-                    example: "'nutshell' | str similarity 'nushell' -A -n".into(),
-                    result: None,
-                },
-            ])
+    }
+
+    fn examples(&self) -> Vec<Example> {
+        vec![
+            Example {
+                description: "Compare two strings for similarity".into(),
+                example: "'nutshell' | str similarity 'nushell'".into(),
+                result: None,
+            },
+            Example {
+                description:
+                    "Compare two strings for similarity and normalize the output value".into(),
+                example: "'nutshell' | str similarity -n 'nushell'".into(),
+                result: None,
+            },
+            Example {
+                description: "Compare two strings for similarity using a specific algorithm"
+                    .into(),
+                example: "'nutshell' | str similarity 'nushell' -a levenshtein".into(),
+                result: None,
+            },
+            Example {
+                description: "List all the included similarity algorithms".into(),
+                example: "str similarity 'nu' --list".into(),
+                result: None,
+            },
+            Example {
+                description: "Compare two strings for similarity with all algorithms".into(),
+                example: "'nutshell' | str similarity 'nushell' -A".into(),
+                result: None,
+            },
+            Example {
+                description: "Compare two strings for similarity with all algorithms and normalize the output value".into(),
+                example: "'nutshell' | str similarity 'nushell' -A -n".into(),
+                result: None,
+            },
+        ]
     }
 
     fn run(
@@ -87,11 +96,8 @@ impl SimplePluginCommand for StrSimilarity {
         let compare_to_str = match compare_to_str_optn {
             Some(p) => p,
             None => {
-                return Err(LabeledError {
-                    label: "Expected a string as a parameter".into(),
-                    msg: format!("found nothing"),
-                    span: Some(call.head),
-                })
+                return Err(LabeledError::new("found nothing")
+                    .with_label("Expected a string as a parameter", call.head));
             }
         };
         let normalize = call.has_flag("normalize")?;
@@ -116,11 +122,11 @@ impl SimplePluginCommand for StrSimilarity {
                 }
             }
             v => {
-                return Err(LabeledError {
-                    label: "Expected something from pipeline".into(),
-                    msg: format!("requires some input, got {}", v.get_type()),
-                    span: Some(call.head),
-                });
+                return Err(LabeledError::new(format!(
+                    "requires some input, got {}",
+                    v.get_type()
+                ))
+                .with_label("Expected something from pipeline", call.head));
             }
         };
 
