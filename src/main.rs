@@ -30,7 +30,7 @@ impl SimplePluginCommand for StrSimilarity {
         "str similarity"
     }
 
-    fn usage(&self) -> &str {
+    fn description(&self) -> &str {
         "Compare strings to find similarity by algorithm"
     }
     fn signature(&self) -> Signature {
