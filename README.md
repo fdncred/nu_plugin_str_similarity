@@ -1,3 +1,5 @@
+I'm archiving this repo because I combined this functionality in the `nu_plugin_strutils` nushell plugin at https://github.com/fdncred/nu_plugin_strutils
+
 # nu_plugin_str_similarity
 
 This plugin uses the [textdistance.rs](https://crates.io/crates/textdistance) crate to calculate edit distance
